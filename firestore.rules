@@ -1,0 +1,158 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Core helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isBootstrappedAdmin() {
+      return isVerified() && request.auth.token.email == 'sistemni25@gmail.com';
+    }
+
+    function getUserRole() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+        : null;
+    }
+
+    function isAdmin() {
+      return isBootstrappedAdmin() || (isVerified() && getUserRole() == 'Administrator');
+    }
+
+    function isCounselor() {
+      return isAdmin() || (isVerified() && getUserRole() == 'Guru BK');
+    }
+
+    function isHomeroom() {
+      return isVerified() && getUserRole() == 'Wali Kelas';
+    }
+
+    function isStaff() {
+      return isCounselor() || isHomeroom();
+    }
+
+    function isValidString(val, maxLen) {
+      return val is string && val.size() <= maxLen;
+    }
+
+    // Connection test doc
+    match /test/connection {
+      allow read: if true;
+    }
+
+    // Users collection (PII & RBAC protected)
+    match /users/{userId} {
+      allow get: if isValidId(userId) && (isAdmin() || (isSignedIn() && request.auth.uid == userId));
+      allow list: if isAdmin() || isCounselor();
+      allow create: if isValidId(userId) && isVerified() && (
+        isAdmin() ||
+        (request.auth.uid == userId && request.resource.data.role == 'Guru BK')
+      );
+      allow update: if isValidId(userId) && isAdmin();
+      allow delete: if isValidId(userId) && isAdmin() && request.auth.uid != userId;
+    }
+
+    // School classes
+    match /classes/{classId} {
+      allow read: if isStaff();
+      allow create, update: if isValidId(classId) && isCounselor()
+        && isValidString(request.resource.data.name, 40)
+        && isValidString(request.resource.data.academicYear, 20);
+      allow delete: if isValidId(classId) && isAdmin();
+    }
+
+    // Students
+    match /students/{studentId} {
+      allow read: if isStaff();
+      allow create, update: if isValidId(studentId) && isCounselor()
+        && isValidString(request.resource.data.nis, 32)
+        && isValidString(request.resource.data.fullName, 140)
+        && isValidString(request.resource.data.classId, 64);
+      allow delete: if isValidId(studentId) && isCounselor();
+    }
+
+    // Daily Attendance (ID: YYYY-MM-DD_studentId)
+    match /attendance/{attendanceId} {
+      allow read: if isStaff();
+      allow create, update: if isValidId(attendanceId) && isStaff()
+        && isValidString(request.resource.data.date, 16)
+        && isValidString(request.resource.data.studentId, 64)
+        && request.resource.data.status in ['Hadir', 'Sakit', 'Izin', 'Alpa', 'Dispensasi'];
+      allow delete: if isValidId(attendanceId) && isCounselor();
+    }
+
+    // Student Cases (Wali Kelas can create referrals, Guru BK & Admin manage all)
+    match /cases/{caseId} {
+      allow read: if isStaff();
+      allow create: if isValidId(caseId) && isStaff()
+        && isValidString(request.resource.data.studentId, 64)
+        && request.resource.data.caseNumber is number
+        && isValidString(request.resource.data.category, 80)
+        && isValidString(request.resource.data.description, 1500);
+      allow update, delete: if isValidId(caseId) && isCounselor();
+    }
+
+    // Confidential Counseling Logs (STRICTLY Administrator & Guru BK ONLY - Wali Kelas denied)
+    match /counselingLogs/{logId} {
+      allow read: if isCounselor();
+      allow create, update: if isValidId(logId) && isCounselor()
+        && isValidString(request.resource.data.caseId, 64)
+        && isValidString(request.resource.data.studentId, 64)
+        && isValidString(request.resource.data.result, 1500);
+      allow delete: if isValidId(logId) && isAdmin();
+    }
+
+    // Parent Calls
+    match /parentCalls/{callId} {
+      allow read: if isCounselor();
+      allow create, update: if isValidId(callId) && isCounselor()
+        && isValidString(request.resource.data.studentId, 64)
+        && isValidString(request.resource.data.reason, 800);
+      allow delete: if isValidId(callId) && isCounselor();
+    }
+
+    // Monitoring Notes
+    match /monitoringNotes/{noteId} {
+      allow read: if isCounselor();
+      allow create, update: if isValidId(noteId) && isCounselor()
+        && isValidString(request.resource.data.studentId, 64)
+        && isValidString(request.resource.data.observation, 1200);
+      allow delete: if isValidId(noteId) && isCounselor();
+    }
+
+    // BK Schedules
+    match /schedules/{scheduleId} {
+      allow read: if isStaff();
+      allow create, update, delete: if isValidId(scheduleId) && isCounselor();
+    }
+
+    // System Settings
+    match /settings/{settingId} {
+      allow read: if isStaff();
+      allow create, update: if isValidId(settingId) && isAdmin();
+      allow delete: if false;
+    }
+
+    // Audit Logs
+    match /auditLogs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isValidId(logId) && isStaff()
+        && isValidString(request.resource.data.action, 120);
+      allow update, delete: if false;
+    }
+  }
+}

@@ -1,0 +1,252 @@
+{
+  "entities": {
+    "UserAccount": {
+      "title": "UserAccount",
+      "description": "Akun pengguna SIBK dengan peran Administrator, Guru BK, atau Wali Kelas",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "format": "email", "maxLength": 150 },
+        "name": { "type": "string", "maxLength": 120 },
+        "role": { "type": "string", "enum": ["Administrator", "Guru BK", "Wali Kelas"] },
+        "assignedClassId": { "type": "string", "maxLength": 64 },
+        "active": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "name", "role", "active"]
+    },
+    "SchoolClass": {
+      "title": "SchoolClass",
+      "description": "Data kelas beserta wali kelas dan tahun ajaran",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "maxLength": 40 },
+        "level": { "type": "string", "maxLength": 16 },
+        "homeroomTeacher": { "type": "string", "maxLength": 120 },
+        "academicYear": { "type": "string", "maxLength": 20 },
+        "archived": { "type": "boolean" }
+      },
+      "required": ["name", "level", "homeroomTeacher", "academicYear"]
+    },
+    "Student": {
+      "title": "Student",
+      "description": "Data lengkap identitas siswa dan orang tua/wali",
+      "type": "object",
+      "properties": {
+        "nis": { "type": "string", "maxLength": 32 },
+        "nisn": { "type": "string", "maxLength": 32 },
+        "fullName": { "type": "string", "maxLength": 140 },
+        "gender": { "type": "string", "enum": ["Laki-laki", "Perempuan"] },
+        "birthPlace": { "type": "string", "maxLength": 80 },
+        "birthDate": { "type": "string", "maxLength": 20 },
+        "religion": { "type": "string", "maxLength": 30 },
+        "classId": { "type": "string", "maxLength": 64 },
+        "className": { "type": "string", "maxLength": 40 },
+        "address": { "type": "string", "maxLength": 300 },
+        "studentPhone": { "type": "string", "maxLength": 30 },
+        "fatherName": { "type": "string", "maxLength": 120 },
+        "motherName": { "type": "string", "maxLength": 120 },
+        "guardianName": { "type": "string", "maxLength": 120 },
+        "parentPhone": { "type": "string", "maxLength": 30 },
+        "parentAddress": { "type": "string", "maxLength": 300 },
+        "entryYear": { "type": "string", "maxLength": 10 },
+        "status": { "type": "string", "enum": ["Aktif", "Pindah", "Lulus", "Keluar"] },
+        "notes": { "type": "string", "maxLength": 500 },
+        "monitoringStatus": { "type": "string", "enum": ["Normal", "Perlu Perhatian", "Dalam Pemantauan", "Prioritas Tinggi"] },
+        "caseCount": { "type": "number" },
+        "academicYear": { "type": "string", "maxLength": 20 }
+      },
+      "required": ["nis", "fullName", "gender", "classId", "className", "status"]
+    },
+    "AttendanceRecord": {
+      "title": "AttendanceRecord",
+      "description": "Catatan kehadiran harian siswa (ID unik: tanggal_studentId)",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string", "maxLength": 16 },
+        "studentId": { "type": "string", "maxLength": 64 },
+        "studentName": { "type": "string", "maxLength": 140 },
+        "nis": { "type": "string", "maxLength": 32 },
+        "classId": { "type": "string", "maxLength": 64 },
+        "className": { "type": "string", "maxLength": 40 },
+        "status": { "type": "string", "enum": ["Hadir", "Sakit", "Izin", "Alpa", "Dispensasi"] },
+        "note": { "type": "string", "maxLength": 300 },
+        "academicYear": { "type": "string", "maxLength": 20 },
+        "recordedBy": { "type": "string", "maxLength": 120 }
+      },
+      "required": ["date", "studentId", "classId", "status"]
+    },
+    "StudentCase": {
+      "title": "StudentCase",
+      "description": "Catatan permasalahan/kasus BK dengan nomor urut otomatis per siswa",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string", "maxLength": 64 },
+        "studentName": { "type": "string", "maxLength": 140 },
+        "nis": { "type": "string", "maxLength": 32 },
+        "classId": { "type": "string", "maxLength": 64 },
+        "className": { "type": "string", "maxLength": 40 },
+        "caseNumber": { "type": "number" },
+        "date": { "type": "string", "maxLength": 16 },
+        "dayName": { "type": "string", "maxLength": 20 },
+        "category": { "type": "string", "maxLength": 80 },
+        "description": { "type": "string", "maxLength": 1500 },
+        "reporter": { "type": "string", "maxLength": 120 },
+        "initialAction": { "type": "string", "maxLength": 500 },
+        "counselorName": { "type": "string", "maxLength": 120 },
+        "status": { "type": "string", "enum": ["Belum ditangani", "Sedang ditangani", "Dalam pemantauan", "Selesai", "Perlu tindak lanjut"] },
+        "academicYear": { "type": "string", "maxLength": 20 }
+      },
+      "required": ["studentId", "caseNumber", "date", "category", "description", "status"]
+    },
+    "CounselingLog": {
+      "title": "CounselingLog",
+      "description": "Catatan konseling rahasia untuk setiap kasus siswa",
+      "type": "object",
+      "properties": {
+        "caseId": { "type": "string", "maxLength": 64 },
+        "studentId": { "type": "string", "maxLength": 64 },
+        "date": { "type": "string", "maxLength": 16 },
+        "counselorName": { "type": "string", "maxLength": 120 },
+        "topic": { "type": "string", "maxLength": 300 },
+        "result": { "type": "string", "maxLength": 1500 },
+        "solution": { "type": "string", "maxLength": 1000 },
+        "studentCommitment": { "type": "string", "maxLength": 1000 },
+        "followUpPlan": { "type": "string", "maxLength": 1000 },
+        "nextEvaluationDate": { "type": "string", "maxLength": 16 },
+        "progressStatus": { "type": "string", "enum": ["Belum ditangani", "Sedang ditangani", "Dalam pemantauan", "Selesai", "Perlu tindak lanjut"] }
+      },
+      "required": ["caseId", "studentId", "date", "counselorName", "topic", "result", "progressStatus"]
+    },
+    "ParentCall": {
+      "title": "ParentCall",
+      "description": "Data pemanggilan orang tua/wali siswa",
+      "type": "object",
+      "properties": {
+        "letterNumber": { "type": "string", "maxLength": 64 },
+        "studentId": { "type": "string", "maxLength": 64 },
+        "studentName": { "type": "string", "maxLength": 140 },
+        "className": { "type": "string", "maxLength": 40 },
+        "parentName": { "type": "string", "maxLength": 120 },
+        "parentPhone": { "type": "string", "maxLength": 30 },
+        "callDate": { "type": "string", "maxLength": 16 },
+        "meetingSchedule": { "type": "string", "maxLength": 40 },
+        "reason": { "type": "string", "maxLength": 800 },
+        "relatedCaseId": { "type": "string", "maxLength": 64 },
+        "meetingResult": { "type": "string", "maxLength": 1200 },
+        "agreement": { "type": "string", "maxLength": 1200 },
+        "followUpNote": { "type": "string", "maxLength": 800 },
+        "status": { "type": "string", "enum": ["Belum dijadwalkan", "Sudah dijadwalkan", "Sudah dipanggil", "Hadir", "Tidak hadir", "Perlu pemanggilan ulang", "Selesai"] }
+      },
+      "required": ["studentId", "studentName", "parentName", "callDate", "reason", "status"]
+    },
+    "MonitoringNote": {
+      "title": "MonitoringNote",
+      "description": "Catatan perkembangan berkala untuk siswa dalam pemantauan",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string", "maxLength": 64 },
+        "date": { "type": "string", "maxLength": 16 },
+        "counselorName": { "type": "string", "maxLength": 120 },
+        "observation": { "type": "string", "maxLength": 1200 },
+        "progressLevel": { "type": "string", "enum": ["Membaik", "Stabil", "Perlu Perhatian", "Menurun"] }
+      },
+      "required": ["studentId", "date", "counselorName", "observation", "progressLevel"]
+    },
+    "BKSchedule": {
+      "title": "BKSchedule",
+      "description": "Jadwal dan agenda kegiatan guru BK",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "maxLength": 160 },
+        "type": { "type": "string", "enum": ["Konseling Siswa", "Pemanggilan Orang Tua", "Tindak Lanjut", "Koordinasi Wali Kelas", "Kegiatan BK"] },
+        "date": { "type": "string", "maxLength": 16 },
+        "time": { "type": "string", "maxLength": 16 },
+        "studentId": { "type": "string", "maxLength": 64 },
+        "studentName": { "type": "string", "maxLength": 140 },
+        "notes": { "type": "string", "maxLength": 800 },
+        "completed": { "type": "boolean" }
+      },
+      "required": ["title", "type", "date", "completed"]
+    },
+    "SystemSettings": {
+      "title": "SystemSettings",
+      "description": "Pengaturan sekolah, tahun ajaran aktif, kategori kasus, dan batas peringatan",
+      "type": "object",
+      "properties": {
+        "schoolName": { "type": "string", "maxLength": 160 },
+        "schoolAddress": { "type": "string", "maxLength": 300 },
+        "schoolPhone": { "type": "string", "maxLength": 40 },
+        "principalName": { "type": "string", "maxLength": 120 },
+        "principalNip": { "type": "string", "maxLength": 40 },
+        "activeAcademicYear": { "type": "string", "maxLength": 20 },
+        "activeSemester": { "type": "string", "enum": ["Ganjil", "Genap"] },
+        "warningThreshold1": { "type": "number" },
+        "warningThreshold2": { "type": "number" },
+        "maxCaseThreshold": { "type": "number" },
+        "reportNumberFormat": { "type": "string", "maxLength": 80 },
+        "categories": { "type": "array" }
+      },
+      "required": ["schoolName", "activeAcademicYear", "activeSemester", "warningThreshold1", "warningThreshold2", "maxCaseThreshold"]
+    },
+    "AuditLog": {
+      "title": "AuditLog",
+      "description": "Log aktivitas pengguna untuk audit keamanan",
+      "type": "object",
+      "properties": {
+        "userEmail": { "type": "string", "maxLength": 150 },
+        "userName": { "type": "string", "maxLength": 120 },
+        "action": { "type": "string", "maxLength": 120 },
+        "target": { "type": "string", "maxLength": 200 },
+        "timestamp": { "type": "string", "maxLength": 40 }
+      },
+      "required": ["userEmail", "action", "target", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserAccount" },
+      "description": "Daftar akun pengguna dan hak akses RBAC"
+    },
+    "/classes/{classId}": {
+      "schema": { "$ref": "#/entities/SchoolClass" },
+      "description": "Daftar kelas aktif dan arsip"
+    },
+    "/students/{studentId}": {
+      "schema": { "$ref": "#/entities/Student" },
+      "description": "Database induk seluruh siswa"
+    },
+    "/attendance/{attendanceId}": {
+      "schema": { "$ref": "#/entities/AttendanceRecord" },
+      "description": "Absensi harian siswa dengan ID deterministik tanggal_studentId"
+    },
+    "/cases/{caseId}": {
+      "schema": { "$ref": "#/entities/StudentCase" },
+      "description": "Daftar kasus/permasalahan siswa"
+    },
+    "/counselingLogs/{logId}": {
+      "schema": { "$ref": "#/entities/CounselingLog" },
+      "description": "Catatan konseling rahasia (hanya Administrator & Guru BK)"
+    },
+    "/parentCalls/{callId}": {
+      "schema": { "$ref": "#/entities/ParentCall" },
+      "description": "Riwayat dan jadwal pemanggilan orang tua/wali"
+    },
+    "/monitoringNotes/{noteId}": {
+      "schema": { "$ref": "#/entities/MonitoringNote" },
+      "description": "Catatan perkembangan siswa dalam pemantauan"
+    },
+    "/schedules/{scheduleId}": {
+      "schema": { "$ref": "#/entities/BKSchedule" },
+      "description": "Jadwal dan agenda kegiatan BK"
+    },
+    "/settings/{settingId}": {
+      "schema": { "$ref": "#/entities/SystemSettings" },
+      "description": "Konfigurasi global sistem SIBK"
+    },
+    "/auditLogs/{logId}": {
+      "schema": { "$ref": "#/entities/AuditLog" },
+      "description": "Catatan audit aktivitas pengguna"
+    }
+  }
+}
